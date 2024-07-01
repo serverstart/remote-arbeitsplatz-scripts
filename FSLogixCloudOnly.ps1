@@ -47,6 +47,8 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Val
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
 
 # Speichere Versionsnummer in Registry
-New-ItemProperty -Path "HKLM:\SOFTWARE\serverstart\RAP" -Name "FSLogixCloud" -Value $SCRIPT_VERSION -force
+New-Item -Path "HKLM:\SOFTWARE" -Name "Serverstart" -ErrorAction Ignore
+New-Item -Path "HKLM:\SOFTWARE\Serverstart" -Name "RemoteArbeitsplatz" -ErrorAction Ignore
+New-ItemProperty -Path "HKLM:\SOFTWARE\Serverstart\Deployments" -Name "FSLogixCloud" -Value $SCRIPT_VERSION -force
 
 write-host "Configuration Complete"
