@@ -6,9 +6,6 @@ param
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ProfileShareName,
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [String]$StorageAccountAccessKey
 )
-
-$SCRIPT_VERSION = "1.0.0"
-
 Write-Host "serverstart managed IT" -ForegroundColor Blue
 Write-Host "Configuring FSLogix" -ForegroundColor Blue
 
@@ -45,10 +42,5 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "ProfileType" -Va
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "SizeInMBs" -Value 20000 -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Value "VHDX" -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
-
-# Speichere Versionsnummer in Registry
-New-Item -Path "HKLM:\SOFTWARE" -Name "Serverstart" -ErrorAction Ignore
-New-Item -Path "HKLM:\SOFTWARE\Serverstart" -Name "RemoteArbeitsplatz" -ErrorAction Ignore
-New-ItemProperty -Path "HKLM:\SOFTWARE\Serverstart\Deployments" -Name "FSLogixCloud" -Value $SCRIPT_VERSION -force
 
 write-host "Configuration Complete"
