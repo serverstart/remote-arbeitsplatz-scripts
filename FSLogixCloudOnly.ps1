@@ -7,6 +7,8 @@ param
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [String]$StorageAccountAccessKey
 )
 
+$SCRIPT_VERSION = "1.0.0"
+
 Write-Host "serverstart managed IT" -ForegroundColor Blue
 Write-Host "Configuring FSLogix" -ForegroundColor Blue
 
@@ -44,5 +46,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "SizeInMBs" -Valu
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Value "VHDX" -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
 
+# Speichere Versionsnummer in Registry
+New-ItemProperty -Path "HKLM:\SOFTWARE\serverstart\RAP" -Name "FSLogixCloud" -Value $SCRIPT_VERSION -force
 
 write-host "Configuration Complete"
