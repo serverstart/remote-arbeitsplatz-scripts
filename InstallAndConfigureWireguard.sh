@@ -5,6 +5,8 @@
 # Automated WireGuard Setup #
 #############################
 
+# Achtung: Löscht alle anderen eingerichteten WireGuard-Verbindungen
+
 # Beispiel für eine WireGuard Konfiguration. Diese muss als base64-String als Parameter übergeben werden
 # 
 # [Interface]
@@ -87,7 +89,8 @@ command -v wg-quick >/dev/null 2>&1 || { echo "wg-quick not found. Please instal
 command -v ifconfig >/dev/null 2>&1 || { echo "ifconfig not found. Please install net-tools." | tee -a $LOG_FILE; exit 1; }
 
 # Decode the base64 encoded configuration and write to the configuration file
-echo "[$(date)] Writing WireGuard configuration to /etc/wireguard/${WIREGUARD_NAME}.conf" | tee -a $LOG_FILE
+echo "[$(date)] Clean old WireGuard configurations and write WireGuard configuration to /etc/wireguard/${WIREGUARD_NAME}.conf" | tee -a $LOG_FILE
+rm /etc/wireguard/*.conf
 echo $BASE64_CONFIG_CONTENT | base64 --decode > /etc/wireguard/${WIREGUARD_NAME}.conf
 
 # Bring up the WireGuard interface
