@@ -37,6 +37,9 @@ catch {
     Write-Host "Message: [$($_.Exception.Message)"]
 }
 
+# Disable LsaCfgFlags
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LsaCfgFlags" -Value 0 -force
+
 
 # Create new reg key "LoadCredKey"
  
