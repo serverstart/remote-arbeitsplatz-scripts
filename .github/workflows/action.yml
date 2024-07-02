@@ -13,5 +13,5 @@ jobs:
           source_dir: /
           container_name: abc
           account_name: azureserverstart
-          sas_token: "sp=r&st=2024-07-02T10:51:31Z&se=2024-07-02T18:51:31Z&spr=https&sv=2022-11-02&sr=c&sig=Z0clKz5fD4co7beGfhKSLNs1mCCxn0zYYBTML9KKXSU%3D"
+          sas_token: "sp=racwdli&st=2024-07-02T10:51:31Z&se=2024-07-02T18:51:31Z&spr=https&sv=2022-11-02&sr=c&sig=FKM1eWbbbbWVBeMVBNhnOlJAUgdzsFSXDCQW5oPASr4%3D"
           extra_args: '--destination-path $GITHUB_SHA'
