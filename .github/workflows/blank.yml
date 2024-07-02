@@ -16,7 +16,7 @@ jobs:
         uses: ./
         with:
           connection_string: ${{ secrets.AZURE_STORAGE_KEY }}
-          container_name: ci-cd
+          container_name: azureserverstart
           source_folder: \
-          destination_folder: ${{ GITHUB_SHA }}
+          destination_folder: $GITHUB_SHA
           clean_destination_folder: true
