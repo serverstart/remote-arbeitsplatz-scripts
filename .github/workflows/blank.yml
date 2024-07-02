@@ -1,0 +1,22 @@
+name: 'Main and Releases'
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  UploadToAzureFiles: 
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Upload without DestinationFolder Test
+        uses: ./
+        with:
+          connection_string: ${{ secrets.AZURE_STORAGE_KEY }}
+          container_name: ci-cd
+          source_folder: \
+          destination_folder: ${{ GITHUB_SHA }}
+          clean_destination_folder: true
