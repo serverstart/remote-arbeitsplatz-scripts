@@ -132,8 +132,23 @@ function Invoke-LoggedCommand {
     $output = Invoke-Expression $Command
     $output | ForEach-Object { Write-Log $_ }
     if ($LASTEXITCODE -eq 0) {
-        Write-Success "$Description erfolgreich"
+        Write-Success "Starte $Description erfolgreich"
     } else {
         Write-Error "$Description fehlgeschlagen (Exit Code: $LASTEXITCODE)"
     }
+}
+
+# Funktion zum Überprüfen und Initialisieren von WinGet
+function Get-WinGetInstallPath {
+    Write-Section "Suche WinGet-Installation…"
+    $wingetInstallScriptPath = "C:\ProgramData\Winget-AutoUpdate\Winget-install.ps1"
+    
+    # Überprüfen, ob das Winget-Install-Skript existiert
+    if (-not (Test-Path $wingetInstallScriptPath)) {
+        Write-Error "Die Datei 'Winget-install.ps1' wurde nicht im Verzeichnis 'C:\ProgramData\Winget-AutoUpdate' gefunden."
+        return $null
+    }
+    
+    Write-Success "WinGet gefunden."
+    return $wingetInstallScriptPath
 }
