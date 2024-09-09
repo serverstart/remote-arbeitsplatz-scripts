@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-    serverstart AVD-Anpassungen: Installiert Microsoft OneDrive über Winget und konfiguriert es für AVD.
+    serverstart AVD-Anpassungen: Installiert Microsoft Teams über Winget und konfiguriert es für AVD.
 .DESCRIPTION
-    Lädt das Winget-Install-Skript herunter, führt es aus, um Microsoft OneDrive zu installieren,
+    Lädt das Winget-Install-Skript herunter, führt es aus, um Microsoft Teams zu installieren,
     und fügt dann die notwendigen Registrierungseinträge für AVD-Umgebungen hinzu.
 #>
 
@@ -24,10 +24,10 @@ function Write-LogError($message) {
 }
 
 function Show-ScriptBanner {
-    Write-Host @"
+Write-Host @"
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║                           serverstart managed IT                           ║
-║       Microsoft OneDrive Installation und Konfiguration für AVD            ║
+║         Microsoft Teams Installation und Konfiguration für AVD             ║
 ║                                                                            ║
 ║                         Datum: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")                         ║
 ╚════════════════════════════════════════════════════════════════════════════╝
@@ -52,58 +52,32 @@ function Show-ScriptSummary {
 try {
     Show-ScriptBanner
 
-    # Variablen definieren
-    $oneDriveSetupUrl = "https://go.microsoft.com/fwlink/p/?LinkId=844652"
-    $oneDriveSetupPath = "$($env:TEMP)\OneDriveSetup.exe"
+    # Registrierungseinträge hinzufügen
+    Write-LogHeader "Registrierungseinträge für AVD hinzufügen"
+    Write-LogStep "Erstelle Registrierungsschlüssel für Teams..."
+    New-Item -Path "HKLM:\SOFTWARE\Microsoft\Teams" -Force
+    Write-LogStep "Setze IsWVDEnvironment-Wert..."
+    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Teams" -Name IsWVDEnvironment -PropertyType DWORD -Value 1 -Force
+    Write-LogSuccess "Registrierungseinträge erfolgreich hinzugefügt"
+
+    # Winget-Install-Skript herunterladen
+    Write-LogHeader "Winget-Install Skript herunterladen"
     $wingetInstallScriptUrl = "https://raw.githubusercontent.com/Romanitho/Winget-Install/main/winget-install.ps1"
     $wingetInstallScriptPath = "$env:TEMP\winget-install.ps1"
 
-    # Alte OneDrive-Versionen deinstallieren
-    Write-LogHeader "Alte OneDrive-Versionen deinstallieren"
-
-    Write-LogStep "OneDrive Setup herunterladen, um Setup-Funktion zum Deinstallieren zu nutzen..."
-    (New-Object System.Net.WebClient).DownloadFile($oneDriveSetupUrl, $oneDriveSetupPath)
-    Write-LogSuccess "Setup heruntergeladen"
-
-    Write-LogStep "Über OneDriveSetup.exe deinstallieren..."
-    Start-Process -FilePath $oneDriveSetupPath -Wait -ArgumentList "/silent /uninstall" -ErrorAction SilentlyContinue
-    Write-LogSuccess "Alte Version deinstalliert"
-
-    # Registrierungseinträge hinzufügen
-    Write-LogHeader "Registrierungseinträge für AVD hinzufügen"
-
-    Write-LogStep "Erstelle Registrierungsschlüssel für OneDrive..."
-    New-Item -Path "HKLM:\SOFTWARE\Microsoft" -Name "OneDrive" -Force -ErrorAction Ignore
-
-    Write-LogStep "Setze AllUsersInstall..."
-    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\OneDrive" -Name "AllUsersInstall" -PropertyType DWord -Value 1 -Force
-
-    Write-LogStep "Erstelle Policy-Registrierungsschlüssel für OneDrive..."
-    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft" -Name "OneDrive" -Force -ErrorAction Ignore
-
-    Write-LogStep "Setze SilentAccountConfig..."
-    New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\OneDrive" -Name "SilentAccountConfig" -PropertyType DWord -Value 1 -Force
-
-    Write-LogStep "Setze OneDrive Background Run on signin..."
-    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run" -Name "OneDrive" -PropertyType String -Value "C:\Program Files\Microsoft OneDrive\OneDrive.exe /background" -Force
-    Write-LogSuccess "Registrierungseinträge erfolgreich hinzugefügt"
-
-    # Winget-Install-Skript herunterladen und ausführen
-    Write-LogHeader "Winget-Install Skript herunterladen"
-    
     Invoke-WebRequest -Uri $wingetInstallScriptUrl -OutFile $wingetInstallScriptPath -UseBasicParsing
     Write-LogSuccess "Winget-Install Skript erfolgreich heruntergeladen"
 
-    Write-LogHeader "OneDrive Installation Ausführen"
-    Write-LogStep "Führe Winget-Install-Skript aus und installiere Microsoft OneDrive..."
-    & $wingetInstallScriptPath -AppIDs Microsoft.OneDrive
+    # Winget-Install-Skript mit dem Argument für Microsoft Teams ausführen
+    Write-LogHeader "Teams Installation Ausführen"
+    Write-LogStep "Führe Winget-Install-Skript aus und installiere Microsoft Teams..."
+    & $wingetInstallScriptPath -AppIDs Microsoft.Teams
 
-    Write-LogSuccess "Winget-Install-Skript wurde ausgeführt. Überprüfen Sie bitte manuell, ob Microsoft OneDrive erfolgreich installiert wurde."
+    Write-LogSuccess "Winget-Install-Skript wurde ausgeführt. Überprüfen Sie bitte manuell, ob Microsoft Teams erfolgreich installiert wurde."
 
-    # Aufräumen: Temporäre Dateien löschen
+    # Aufräumen: Temporäre Datei löschen
     Remove-Item $wingetInstallScriptPath -ErrorAction SilentlyContinue
-    Remove-Item $oneDriveSetupPath -ErrorAction SilentlyContinue
-    Write-LogSuccess "Temporäre Dateien wurden gelöscht"
+    Write-LogSuccess "Temporäre Skriptdatei wurde gelöscht"
 }
 catch {
     Write-LogError "Fehler bei der Ausführung des Skripts"
