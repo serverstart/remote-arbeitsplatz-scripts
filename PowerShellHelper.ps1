@@ -17,12 +17,12 @@ function Write-LogError($message) {
 
 function Show-ScriptBanner {
     Write-Host @"
-╔════════════════════════════════════════════════════════════════════════════╗
-║                           serverstart managed IT                           ║
-║       Microsoft OneDrive Installation und Konfiguration für AVD            ║
-║                                                                            ║
-║                         Datum: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")                         ║
-╚════════════════════════════════════════════════════════════════════════════╝
++----------------------------------------------------------------------------+
+|                           serverstart managed IT                           |
+|       Microsoft OneDrive Installation und Konfiguration für AVD            |
+|                                                                            |
+|                         Datum: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")                         |
++----------------------------------------------------------------------------+
 "@ -ForegroundColor Blue
 }
 
