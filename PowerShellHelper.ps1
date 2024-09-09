@@ -1,4 +1,4 @@
-# Datei: ServerStartLogging.ps1
+# Datei: SmitLogging.ps1
 # Beschreibung: Enthält Funktionen für Logging, Banner-Anzeige und Skript-Initialisierung
 # Autor: [Ihr Name]
 # Datum: [Aktuelles Datum]
@@ -14,7 +14,7 @@ $script:LogFile = ""
 $script:IsInitialized = $false
 
 # Funktion zum Initialisieren des Loggings und Anzeigen des Banners
-function Start-ServerStartLogging {
+function Start-Logging {
     param (
         [string]$Name,
         [string]$FriendlyName
@@ -30,50 +30,47 @@ function Start-ServerStartLogging {
     }
 
     # Zeige den Banner an
-    Show-ServerStartBanner
+    Show-Banner
 }
 
 # Funktion zur Überprüfung der Skript-Initialisierung
-function Assert-ServerStartInitialized {
+function Assert-Initialized {
     if (-not $script:IsInitialized) {
-        throw "Fehler: Logging wurde nicht initialisiert. Bitte Start-ServerStartLogging aufrufen, bevor andere Funktionen verwendet werden."
+        throw "Fehler: Logging wurde nicht initialisiert. Bitte Start-Logging aufrufen, bevor andere Funktionen verwendet werden."
     }
 }
 
 # Funktion zum Schreiben in die Log-Datei
-function Write-ServerStartLog {
+function Write-Log {
     param (
         [string]$Message,
         [string]$Type = "INFO"
     )
-    Assert-ServerStartInitialized
+    Assert-Initialized
     $logMessage = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') [$Type] $Message"
     Add-Content -Path $script:LogFile -Value $logMessage
 }
 
 # Funktion zum Anzeigen des Skript-Banners
-function Show-ServerStartBanner {
-    Assert-ServerStartInitialized
+function Show-Banner {
+    Assert-Initialized
     $bannerText = @"
 serverstart managed IT
 $script:ScriptFriendlyName
 Datum: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 "@
-    $bannerWidth = ($bannerText -split "`n" | Measure-Object -Property Length -Maximum).Maximum + 4
     $banner = @"
-+$('-' * $bannerWidth)+
-|$(' ' * $bannerWidth)|
-$(($bannerText -split "`n" | ForEach-Object { "| $($_.PadRight($bannerWidth - 2)) |" }) -join "`n")
-|$(' ' * $bannerWidth)|
-+$('-' * $bannerWidth)+
+====================
+$bannerText
+====================
 "@
     Write-Host $banner -ForegroundColor Blue
-    Write-ServerStartLog "Skript gestartet: $script:ScriptFriendlyName"
+    Write-Log "Skript gestartet: $script:ScriptFriendlyName"
 }
 
 # Funktion zum Anzeigen der Skript-Zusammenfassung
-function Show-ServerStartSummary {
-    Assert-ServerStartInitialized
+function Show-Summary {
+    Assert-Initialized
     $color = if ($LASTEXITCODE -eq 0) { "Green" } else { "Red" }
     $statusMessage = if ($LASTEXITCODE -eq 0) { "Skript-Ausfuehrung ERFOLGREICH beendet" } else { "Skript-Ausfuehrung MIT FEHLERN beendet" }
     
@@ -82,48 +79,45 @@ $statusMessage
 Exit Code: $LASTEXITCODE
 Endzeit: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
 "@
-    $summaryWidth = ($summaryText -split "`n" | Measure-Object -Property Length -Maximum).Maximum + 4
     $summary = @"
 
-+$('-' * $summaryWidth)+
-|$(' ' * $summaryWidth)|
-$(($summaryText -split "`n" | ForEach-Object { "| $($_.PadRight($summaryWidth - 2)) |" }) -join "`n")
-|$(' ' * $summaryWidth)|
-+$('-' * $summaryWidth)+
+====================
+$summaryText
+====================
 "@
     Write-Host $summary -ForegroundColor $color
-    Write-ServerStartLog "Skript beendet: $statusMessage (Exit Code: $LASTEXITCODE)"
+    Write-Log "Skript beendet: $statusMessage (Exit Code: $LASTEXITCODE)"
 }
 
 # Funktion zum Schreiben einer Log-Überschrift
-function Write-ServerStartLogHeader {
+function Write-Section {
     param ([string]$Message)
-    Assert-ServerStartInitialized
-    $header = "`n`n==== $Message ====`n"
-    Write-Host $header -ForegroundColor Cyan
-    Write-ServerStartLog $Message "HEADER"
+    Assert-Initialized
+    $section = "`n`n==== $Message ====`n"
+    Write-Host $section -ForegroundColor Cyan
+    Write-Log $Message "SECTION"
 }
 
 # Funktion zum Schreiben eines Log-Schritts
-function Write-ServerStartLogStep {
+function Write-Step {
     param ([string]$Message)
-    Assert-ServerStartInitialized
+    Assert-Initialized
     Write-Host "> $Message" -ForegroundColor White
-    Write-ServerStartLog $Message "STEP"
+    Write-Log $Message "STEP"
 }
 
 # Funktion zum Schreiben einer Erfolgsmeldung
-function Write-ServerStartLogSuccess {
+function Write-Success {
     param ([string]$Message)
-    Assert-ServerStartInitialized
+    Assert-Initialized
     Write-Host "OK $Message`n" -ForegroundColor Green
-    Write-ServerStartLog $Message "SUCCESS"
+    Write-Log $Message "SUCCESS"
 }
 
 # Funktion zum Schreiben einer Fehlermeldung
-function Write-ServerStartLogError {
+function Write-Error {
     param ([string]$Message)
-    Assert-ServerStartInitialized
+    Assert-Initialized
     Write-Host "X $Message`n" -ForegroundColor Red
-    Write-ServerStartLog $Message "ERROR"
+    Write-Log $Message "ERROR"
 }
