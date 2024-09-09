@@ -8,11 +8,11 @@ function Write-LogStep($message) {
 }
 
 function Write-LogSuccess($message) {
-    Write-Host "✓ $message`n" -ForegroundColor Green
+    Write-Host "OK $message`n" -ForegroundColor Green
 }
 
 function Write-LogError($message) {
-    Write-Host "✗ $message`n" -ForegroundColor Red
+    Write-Host "X $message`n" -ForegroundColor Red
 }
 
 function Show-ScriptBanner {
