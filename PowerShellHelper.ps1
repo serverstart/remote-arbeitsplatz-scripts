@@ -139,7 +139,7 @@ function Invoke-LoggedCommand {
 }
 
 # Funktion zum Überprüfen und Initialisieren von WinGet
-function WinGetInstallScriptPath {
+function Get-WinGetInstallScriptPath {
     Write-Step "Suche WinGet-Installation…"
     $wingetInstallScriptPath = "C:\ProgramData\Winget-AutoUpdate\Winget-install.ps1"
     
