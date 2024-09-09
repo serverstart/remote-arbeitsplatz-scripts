@@ -121,3 +121,19 @@ function Write-Error {
     Write-Host "X $Message`n" -ForegroundColor Red
     Write-Log $Message "ERROR"
 }
+
+# Funktion zum Ausführen von Befehlen und Loggen der Ausgabe
+function Invoke-LoggedCommand {
+    param (
+        [string]$Command,
+        [string]$Description
+    )
+    Write-Step $Description
+    $output = Invoke-Expression $Command
+    $output | ForEach-Object { Write-Log $_ }
+    if ($LASTEXITCODE -eq 0) {
+        Write-Success "$Description erfolgreich"
+    } else {
+        Write-Error "$Description fehlgeschlagen (Exit Code: $LASTEXITCODE)"
+    }
+}
