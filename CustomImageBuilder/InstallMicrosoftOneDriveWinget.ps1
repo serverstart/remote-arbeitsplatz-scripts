@@ -62,7 +62,7 @@ try {
     Write-LogHeader "Alte OneDrive-Versionen deinstallieren"
 
     Write-LogStep "OneDrive Setup herunterladen, um Setup-Funktion zum Deinstallieren zu nutzen..."
-    (New-Object System.Net.WebClient).DownloadFile($oneDriveSetupUrl, $oneDriveSetupPath)
+    Invoke-WebRequest -Uri $oneDriveSetupUrl -OutFile $oneDriveSetupPath
     Write-LogSuccess "Setup heruntergeladen"
 
     Write-LogStep "Über OneDriveSetup.exe deinstallieren..."
