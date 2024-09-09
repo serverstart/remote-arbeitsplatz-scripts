@@ -29,6 +29,9 @@ function Start-Logging {
         New-Item -ItemType Directory -Path $LogPath -Force | Out-Null
     }
 
+    # Zeige Log-File-Pfad an
+    Write-Host "Log-File: $script:LogFile"
+
     # Zeige den Banner an
     Show-Banner
 }
