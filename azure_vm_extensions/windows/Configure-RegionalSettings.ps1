@@ -32,5 +32,12 @@ try {
     Write-Host "Fehler beim Anwenden der Eingabemethoden: $_" -ForegroundColor Red
 }
 
+# Apply the settings to the Default User profile for new users
+$registryPath = "HKU\.DEFAULT\Control Panel\International"
+
+Set-ItemProperty -Path $registryPath -Name "sShortDate" -Value "dd.MM.yyyy"
+Set-ItemProperty -Path $registryPath -Name "sLongDate" -Value "dddd, dd. MMMM yyyy"
+Set-ItemProperty -Path $registryPath -Name "sTimeFormat" -Value "HH:mm:ss"
+
 # Log message for completion
 Write-Host "Alle regionalen Einstellungen und Eingabemethoden wurden angewendet." -ForegroundColor Green
