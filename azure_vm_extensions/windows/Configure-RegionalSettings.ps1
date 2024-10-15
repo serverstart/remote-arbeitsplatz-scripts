@@ -32,120 +32,55 @@ try {
     Write-Host "Fehler beim Anwenden der Eingabemethoden: $_" -ForegroundColor Red
 }
 
-# Load the .DEFAULT registry hive
-reg load HKU\.DEFAULT "C:\Users\Default\NTUSER.DAT"
+# Pfad zur NTUSER.DAT-Datei
+$ntuserDatPath = "C:\Users\Default\NTUSER.DAT"
 
-$LocaleSettings = @"
-Windows Registry Editor Version 5.00
+# Temporärer Registrierungspfad
+$tempHivePath = "HKLM:\TempHive"
 
-[HKEY_CURRENT_USER\Control Panel\International]
-"Locale"="00000407"
-"sShortDate"="dd.MM.yyyy"
-"sDate"="."
-"sLongDate"="dddd, d. MMMM yyyy"
-"sTime"="HH:mm:ss"
-"s1159"=""
-"s2359"=""
-"sTimeFormat"="HH:mm:ss"
-"iCountry"="49"
-"iDate"="1"
-"iTime"="1"
-"iTLZero"="1"
-"iCurrency"="3"
-"iNegCurr"="1"
-"sCurrency"="€"
-"sMonDecimalSep"=","
-"sMonThousandSep"="."
-"iDigits"="2"
-"iLZero"="1"
-"sDecimal"=","
-"sThousand"="."
-"iMeasure"="0"
-"iPaperSize"="9"
-"iDefaultUILanguage"="1031"
-"iLangID"="1031"
-"LocaleName"="de-DE"
-"@
-  
-# Default Profile:
-Write-Verbose ('Writing registry values for profile: DEFAULT') -Verbose
-Write-RegistryWithHiveLoad -RegFileContents $LocaleSettings -DatFilePath C:\Users\Default\NTUSER.DAT
+# Laden der NTUSER.DAT in den temporären Hive
+reg load HKLM\TempHive $ntuserDatPath
+
+# Setzen der Locale-Werte
+$localeSettings = @{
+    "sCountry" = "Deutschland"
+    "sLanguage" = "Deutsch"
+    "sShortDate" = "dd.MM.yyyy"
+    "sLongDate" = "dddd, d. MMMM yyyy"
+    "sShortTime" = "HH:mm"
+    "sTimeFormat" = "HH:mm:ss"
+    "sYearMonth" = "MMMM yyyy"
+    "iFirstDayOfWeek" = "0"
+    "iFirstWeekOfYear" = "2"
+    "sDecimal" = ","
+    "sThousand" = "."
+    "sCurrency" = "€"
+    "iCurrDigits" = "2"
+    "iNegCurr" = "8"
+    "sMonDecimalSep" = ","
+    "sMonThousandSep" = "."
+    "iDate" = "1"
+    "iTime" = "1"
+    "iTLZero" = "1"
+    "iMeasure" = "0"
+    "sNativeDigits" = "0123456789"
+    "iDigits" = "2"
+    "iNegNumber" = "1"
+    "sPositiveSign" = ""
+    "sNegativeSign" = "-"
+    "s1159" = ""
+    "s2359" = ""
+}
+
+foreach ($key in $localeSettings.Keys) {
+    Set-ItemProperty -Path "$tempHivePath\Control Panel\International" -Name $key -Value $localeSettings[$key]
+}
+
+# Entladen des temporären Hive
+[gc]::Collect()
+reg unload HKLM\TempHive
+
+Write-Host "Die Locale-Einstellungen wurden erfolgreich für alle neuen Benutzer auf Deutsch und 24-Stunden-Format gesetzt."
 
 # Log message for completion
 Write-Host "Alle regionalen Einstellungen und Eingabemethoden wurden angewendet." -ForegroundColor Green
-
-
-
-
-
-
-
-
-
-function Get-TempRegFilePath {
-    (Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath ([guid]::NewGuid().Guid)) + '.reg'
-}
-
-function Write-Registry {
-    param($RegFileContents, $UserSid)
-    
-    $TempRegFile = Get-TempRegFilePath
-    $regFileContents = $regFileContents -replace 'HKEY_CURRENT_USER', "HKEY_USERS\$userSid"
-    $regFileContents | Out-File -FilePath $TempRegFile
-    
-    $p = Start-Process -FilePath C:\Windows\regedit.exe -ArgumentList @('/s', $TempRegFile) -PassThru
-    do { Start-Sleep -Seconds 1 } while (-not $p.HasExited)
-    
-    Remove-Item -Path $TempRegFile -Force
-}
-
-function Write-RegistryWithHiveLoad {
-    param($RegFileContents, $DatFilePath)
-    
-    $hiveName = 'x_' +  ($user = (($datFilePath -split '\\')[-2]).ToUpper())
-
-    try {
-        if(-not (IsFileLocked -Path $DatFilePath)) {
-            $null = C:\Windows\System32\reg.exe load "HKU\$hiveName" $DatFilePath
-            if($LASTEXITCODE -ne 0) { throw 'Error loading the DAT file' }
-    
-            $TempRegFile = Get-TempRegFilePath
-            $regFileContents = $regFileContents -replace 'HKEY_CURRENT_USER', "HKEY_USERS\$hiveName"
-            $regFileContents | Out-File -FilePath $TempRegFile
-
-            $p = Start-Process -FilePath C:\Windows\regedit.exe -ArgumentList @('/s', $TempRegFile) -PassThru
-            do { Start-Sleep -Seconds 1 } while (-not $p.HasExited)
-
-            $null = C:\Windows\System32\reg.exe unload "HKU\$hiveName"
-
-            Remove-Item -Path $TempRegFile -Force
-        } else {
-            Write-Verbose ('Skipped user {0}. File {1} is locked by another process' -f $user, $DatFilePath) -Verbose
-        }
-    } catch {
-        Write-Verbose $_.Exception.Message -Verbose
-    }
-}
-
-function IsFileLocked {
-    param([string]$Path)
-
-    [bool] $isFileLocked = $true
-    $file = $null
-
-    try {
-        $file = [IO.File]::Open(
-            $Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None
-        )
-        $isFileLocked = $false
-    } catch [IO.IOException] {
-        if ($_.Exception.Message -notmatch 'used by another process') {
-            throw $_.Exception
-        }
-    } finally {
-        if ($null -ne $file) {
-            $file.Close()
-        }
-    }
-    $isFileLocked
-}
