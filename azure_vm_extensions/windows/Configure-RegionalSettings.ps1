@@ -32,12 +32,23 @@ try {
     Write-Host "Fehler beim Anwenden der Eingabemethoden: $_" -ForegroundColor Red
 }
 
-# Apply the settings to the Default User profile for new users
+# Load the .DEFAULT registry hive
+reg load HKU\.DEFAULT "C:\Users\Default\NTUSER.DAT"
+
+# Set date and time format for the default profile
 $registryPath = "HKU\.DEFAULT\Control Panel\International"
 
-Set-ItemProperty -Path $registryPath -Name "sShortDate" -Value "dd.MM.yyyy"
-Set-ItemProperty -Path $registryPath -Name "sLongDate" -Value "dddd, dd. MMMM yyyy"
-Set-ItemProperty -Path $registryPath -Name "sTimeFormat" -Value "HH:mm:ss"
+if (Test-Path $registryPath) {
+    Set-ItemProperty -Path $registryPath -Name "sShortDate" -Value "dd.MM.yyyy"
+    Set-ItemProperty -Path $registryPath -Name "sLongDate" -Value "dddd, dd. MMMM yyyy"
+    Set-ItemProperty -Path $registryPath -Name "sTimeFormat" -Value "HH:mm:ss"
+    Write-Host "Date and time formats for default user profile have been updated."
+} else {
+    Write-Host "Registry path for default user profile not found."
+}
+
+# Unload the .DEFAULT registry hive after making changes
+reg unload HKU\.DEFAULT
 
 # Log message for completion
 Write-Host "Alle regionalen Einstellungen und Eingabemethoden wurden angewendet." -ForegroundColor Green
