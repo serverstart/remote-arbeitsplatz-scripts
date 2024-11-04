@@ -102,9 +102,18 @@ fi
 # Provider registrieren
 echo -e "\nRegistriere den Provider..."
 if az provider register --namespace Microsoft.Compute &> /dev/null; then
-    echo -e "${GREEN}Provider erfolgreich registriert${NC}"
+    echo -e "${GREEN}Provider Microsoft.Compute erfolgreich registriert${NC}"
 else
-    echo -e "${RED}Fehler: Registrierung des Providers fehlgeschlagen${NC}" >&2
+    echo -e "${RED}Fehler: Registrierung des Providers Microsoft.Compute fehlgeschlagen${NC}" >&2
+    exit 1
+fi
+
+# Provider registrieren
+echo -e "\nRegistriere den Provider..."
+if az provider register --namespace Microsoft.SqlVirtualMachine &> /dev/null; then
+    echo -e "${GREEN}Provider Microsoft.SqlVirtualMachine erfolgreich registriert${NC}"
+else
+    echo -e "${RED}Fehler: Registrierung des Providers Microsoft.SqlVirtualMachine fehlgeschlagen${NC}" >&2
     exit 1
 fi
 
