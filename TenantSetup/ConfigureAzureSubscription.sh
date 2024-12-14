@@ -117,6 +117,15 @@ else
     exit 1
 fi
 
+# Provider registrieren: Microsoft.DesktopVirtualization
+echo -e "\nRegistriere den Provider: Microsoft.DesktopVirtualization..."
+if az provider register --namespace Microsoft.DesktopVirtualization &> /dev/null; then
+    echo -e "${GREEN}Provider Microsoft.DesktopVirtualization erfolgreich registriert${NC}"
+else
+    echo -e "${RED}Fehler: Registrierung des Providers Microsoft.DesktopVirtualization fehlgeschlagen${NC}" >&2
+    exit 1
+fi
+
 # Abmelden
 echo -e "\nAbmelden aus Azure-CLI..."
 if az logout &> /dev/null; then
