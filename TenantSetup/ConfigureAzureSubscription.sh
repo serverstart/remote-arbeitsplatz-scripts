@@ -91,7 +91,7 @@ fi
 
 
 # Feature aktivieren
-echo -e "\nAktiviere EncryptionAtHost..."
+echo -e "\nAktiviere das Feature: EncryptionAtHost..."
 if az feature register --name EncryptionAtHost --namespace Microsoft.Compute &> /dev/null; then
     echo -e "${GREEN}EncryptionAtHost erfolgreich aktiviert${NC}"
 else
@@ -100,7 +100,7 @@ else
 fi
 
 # Provider registrieren
-echo -e "\nRegistriere den Provider..."
+echo -e "\nRegistriere den Provider: Microsoft.Compute..."
 if az provider register --namespace Microsoft.Compute &> /dev/null; then
     echo -e "${GREEN}Provider Microsoft.Compute erfolgreich registriert${NC}"
 else
@@ -108,8 +108,8 @@ else
     exit 1
 fi
 
-# Provider registrieren
-echo -e "\nRegistriere den Provider..."
+# Provider registrieren: 
+echo -e "\nRegistriere den Provider: Microsoft.SqlVirtualMachine..."
 if az provider register --namespace Microsoft.SqlVirtualMachine &> /dev/null; then
     echo -e "${GREEN}Provider Microsoft.SqlVirtualMachine erfolgreich registriert${NC}"
 else
