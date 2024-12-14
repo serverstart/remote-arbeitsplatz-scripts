@@ -143,10 +143,10 @@ fi
 echo -e "\nErstelle neue Secrets..."
 
 # Erster Schlüssel
-secretDevelopmentName="serverstart Development"
-secretDevelopment=$(az ad app credential reset --id "$servicePrincipalAppId" --append --display-name "$secretDevelopmentName" --years 2)
-secretDevelopmentPassword=$(echo "$secretDevelopment" | jq -r .password)
-echo -e "${GREEN}Neues Secret '$secretDevelopmentName' erstellt.${NC}"
+secretBackupName="serverstart Backup-Key"
+secretBackup=$(az ad app credential reset --id "$servicePrincipalAppId" --append --display-name "$secretBackupName" --years 2)
+secretBackupPassword=$(echo "$secretBackup" | jq -r .password)
+echo -e "${GREEN}Neues Secret '$secretBackupName' erstellt.${NC}"
 
 # Zweiter Schlüssel
 secretCloudName="serverstart Terraform Cloud"
@@ -157,16 +157,24 @@ echo -e "${GREEN}Neues Secret '$secretCloudName' erstellt.${NC}"
 echo -e "\n${GREEN}Service Principal Setup abgeschlossen${NC}\n"
 
 # Ausgabe für Terraform
-echo -e "\n\n${BLUE}terraform.tfvars - Konfiguration:${NC}"
+echo -e "\n\n${YELLOW}terraform.tfvars - Konfiguration:${NC}"
 echo "azure_service_principal_app_id=\"$servicePrincipalAppId\""
 echo "azure_service_principal_object_id=\"$servicePrincipalObjectId\""
-echo "azure_service_principal_secret=\"$secretDevelopmentPassword\""
+echo "azure_service_principal_secret=\"$secretCloudPassword\""
 echo "azure_customer_subscription_id=\"$subscriptionId\""
 echo "azure_customer_tenant_id=\"$servicePrincipalTenantId\""
 
-# Ausgabe des Cloud-Secrets
-echo -e "\n\n${BLUE}Cloud-Secret:${NC}"
-echo "azure_service_principal_secret=\"$secretCloudPassword\""
+# Ausgabe für Luna
+echo -e "\n\n${BLUE}Luna-Konfiguration:${NC}"
+echo "Tenant-ID: \"$servicePrincipalTenantId\""
+echo "Subscription-ID: \"$subscriptionId\""
+echo "Client / App-ID: \"$servicePrincipalAppId\""
+echo "Client-Secret: \"$secretCloudPassword\""
+
+# Ausgabe für Luna
+echo -e "\n\n${RED}Backup-Daten:${NC}"
+echo "Client-ID: \"$servicePrincipalAppId\""
+echo "Backup-Secret: \"$secretBackupPassword\""
 
 # Warnung
 echo -e "\n\n${YELLOW}Bitte prüfen, ob die Administratorzustimmung für die API-Rollen noch ausstehen!${NC}"
