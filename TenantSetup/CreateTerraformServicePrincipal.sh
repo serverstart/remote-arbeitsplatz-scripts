@@ -158,11 +158,11 @@ echo -e "\n${GREEN}Service Principal Setup abgeschlossen${NC}\n"
 
 # Ausgabe für Terraform
 echo -e "\n\n${YELLOW}terraform.tfvars - Konfiguration:${NC}"
-echo "azure_service_principal_app_id=\"$servicePrincipalAppId\""
-echo "azure_service_principal_object_id=\"$servicePrincipalObjectId\""
-echo "azure_service_principal_secret=\"$secretCloudPassword\""
-echo "azure_customer_subscription_id=\"$subscriptionId\""
-echo "azure_customer_tenant_id=\"$servicePrincipalTenantId\""
+echo "global_azure_customer_service_principal_app_id=\"$servicePrincipalAppId\""
+echo "global_azure_customer_service_principal_object_id=\"$servicePrincipalObjectId\""
+echo "global_azure_customer_service_principal_secret=\"$secretCloudPassword\""
+echo "global_azure_customer_subscription_id=\"$subscriptionId\""
+echo "global_azure_customer_tenant_id=\"$servicePrincipalTenantId\""
 
 # Ausgabe für Luna
 echo -e "\n\n${BLUE}Luna-Konfiguration:${NC}"
