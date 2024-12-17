@@ -1,86 +1,132 @@
-# Script to define regional settings on Azure Virtual Machines deployed from the market place
-# Locale: German (Germany)
-# Author: Adapted by ChatGPT from original script by Alexandre Verkinderen
-# Simplified for Azure VM Extension use (no restart, error handling without exit)
+# ======================================================================
+# Azure Virtual Desktop (AVD) Golden Image Localization Script
+# Purpose: Sets German regional and language settings for both system and default user profile
+# Region: German (Germany)
+# ======================================================================
 
-# Variables for region and settings
-$Locale = "de-DE"
-$GeoID = 94
-$TimeZone = "W. Europe Standard Time"  # Correct time zone for Western Europe
-$InputLanguageID = "0407:00000407"
+# Region Variables
+$Locale = "de-DE"                                    # German culture code
+$GeoID = 94                                         # Geographic location ID for Germany
+$TimeZone = "W. Europe Standard Time"               # Time zone for Germany/Western Europe
+$InputLanguageID = "0407:00000407"                  # German keyboard layout
+$LanguageID = "00000407"                           # Windows language ID for German
 
-# Set languages/culture
+# ======================================================================
+# PART 1: System-Wide Settings
+# These settings affect the currently running system
+# ======================================================================
 try {
-    Set-WinSystemLocale $Locale
-    Set-WinUserLanguageList -LanguageList $Locale -Force
-    Set-Culture -CultureInfo $Locale
-    Set-WinHomeLocation -GeoId $GeoID
-    Set-TimeZone -Id $TimeZone  # Use -Id to set time zone
-    Write-Host "Die Regionaleinstellungen wurden erfolgreich angewendet." -ForegroundColor Green
+    # Set system locale, language, and regional settings
+    Set-WinSystemLocale $Locale                     # System locale (for non-Unicode programs)
+    Set-WinUserLanguageList -LanguageList $Locale -Force  # Display language
+    Set-Culture -CultureInfo $Locale                # User culture settings
+    Set-WinHomeLocation -GeoId $GeoID              # Geographic location
+    Set-TimeZone -Id $TimeZone                      # Time zone
+    Write-Host "1. Systemweite Einstellungen wurden erfolgreich angewendet." -ForegroundColor Green
 } catch {
-    Write-Host "Fehler beim Anwenden der Regionaleinstellungen: $_" -ForegroundColor Red
+    Write-Host "Fehler bei systemweiten Einstellungen: $_" -ForegroundColor Red
 }
 
-# Apply the input preferences for keyboard layout
+# ======================================================================
+# PART 2: Input Settings
+# Configure keyboard and input method settings
+# ======================================================================
 try {
     $LanguageList = New-WinUserLanguageList $Locale
-    Set-WinUserLanguageList $LanguageList -Force
-    Set-WinUILanguageOverride $Locale
-    Set-WinDefaultInputMethodOverride -InputTip $InputLanguageID
-    Write-Host "Die Tastatureinstellungen wurden erfolgreich angewendet." -ForegroundColor Green
+    Set-WinUserLanguageList $LanguageList -Force     # Set language list
+    Set-WinUILanguageOverride $Locale                # Override UI language
+    Set-WinDefaultInputMethodOverride -InputTip $InputLanguageID  # Set keyboard layout
+    Write-Host "2. Eingabe- und Tastatureinstellungen wurden erfolgreich angewendet." -ForegroundColor Green
 } catch {
-    Write-Host "Fehler beim Anwenden der Eingabemethoden: $_" -ForegroundColor Red
+    Write-Host "Fehler bei Eingabeeinstellungen: $_" -ForegroundColor Red
 }
 
-# Pfad zur NTUSER.DAT-Datei
-$ntuserDatPath = "C:\Users\Default\NTUSER.DAT"
+# ======================================================================
+# PART 3: Default User Profile Settings
+# These settings will apply to any new user profile created on the system
+# Critical for AVD as each user gets a new profile on first login
+# ======================================================================
 
-# Temporärer Registrierungspfad
-$tempHivePath = "HKLM:\TempHive"
+# Path definitions
+$ntuserDatPath = "C:\Users\Default\NTUSER.DAT"      # Default user profile registry hive
+$tempHivePath = "HKLM:\TempHive"                    # Temporary mounting point
 
-# Laden der NTUSER.DAT in den temporären Hive
+# Mount the default user registry hive
 reg load HKLM\TempHive $ntuserDatPath
 
-# Setzen der Locale-Werte
+# Detailed locale settings for new user profiles
 $localeSettings = @{
+    # Regional format settings
     "sCountry" = "Deutschland"
     "sLanguage" = "Deutsch"
+    
+    # Date formats
     "sShortDate" = "dd.MM.yyyy"
     "sLongDate" = "dddd, d. MMMM yyyy"
+    "sYearMonth" = "MMMM yyyy"
+    
+    # Time formats
     "sShortTime" = "HH:mm"
     "sTimeFormat" = "HH:mm:ss"
-    "sYearMonth" = "MMMM yyyy"
-    "iFirstDayOfWeek" = "0"
-    "iFirstWeekOfYear" = "2"
-    "sDecimal" = ","
-    "sThousand" = "."
-    "sCurrency" = "€"
-    "iCurrDigits" = "2"
-    "iNegCurr" = "8"
-    "sMonDecimalSep" = ","
-    "sMonThousandSep" = "."
-    "iDate" = "1"
-    "iTime" = "1"
-    "iTLZero" = "1"
-    "iMeasure" = "0"
+    "s1159" = ""                                    # AM symbol (empty for 24h format)
+    "s2359" = ""                                    # PM symbol (empty for 24h format)
+    
+    # Calendar settings
+    "iFirstDayOfWeek" = "0"                        # Monday
+    "iFirstWeekOfYear" = "2"                       # First week with 4 days
+    
+    # Number formats
+    "sDecimal" = ","                               # Decimal separator
+    "sThousand" = "."                              # Thousand separator
+    "iDigits" = "2"                                # Decimal places
     "sNativeDigits" = "0123456789"
-    "iDigits" = "2"
-    "iNegNumber" = "1"
+    "iNegNumber" = "1"                             # Negative number format
     "sPositiveSign" = ""
     "sNegativeSign" = "-"
-    "s1159" = ""
-    "s2359" = ""
+    
+    # Currency formats
+    "sCurrency" = "€"
+    "iCurrDigits" = "2"                           # Currency decimal places
+    "iNegCurr" = "8"                              # Negative currency format
+    "sMonDecimalSep" = ","
+    "sMonThousandSep" = "."
+    
+    # Measurement
+    "iMeasure" = "0"                              # Metric
+    
+    # Additional settings
+    "iDate" = "1"                                 # Date format order
+    "iTime" = "1"                                 # Time format
+    "iTLZero" = "1"                              # Leading zeros in time
 }
 
+# Apply locale settings to default user profile
 foreach ($key in $localeSettings.Keys) {
     Set-ItemProperty -Path "$tempHivePath\Control Panel\International" -Name $key -Value $localeSettings[$key]
 }
 
-# Entladen des temporären Hive
+# Additional language settings for default user
+Set-ItemProperty -Path "$tempHivePath\Control Panel\International" -Name "Locale" -Value $LanguageID
+Set-ItemProperty -Path "$tempHivePath\Control Panel\International" -Name "LocaleName" -Value $Locale
+Set-ItemProperty -Path "$tempHivePath\Control Panel\Desktop" -Name "PreferredUILanguages" -Value $Locale
+
+Write-Host "3. Benutzerprofileinstellungen (NTUSER.DAT) wurden erfolgreich angewendet." -ForegroundColor Green
+
+# ======================================================================
+# PART 4: System Language Settings
+# These affect system-wide language and format settings
+# ======================================================================
+
+# Set system-wide language settings
+$regPathSystem = "HKLM:\SYSTEM\CurrentControlSet\Control\Nls\Language"
+Set-ItemProperty -Path $regPathSystem -Name "Default" -Value $LanguageID
+Set-ItemProperty -Path $regPathSystem -Name "InstallLanguage" -Value $LanguageID
+
+# Cleanup: Unload the default user registry hive
 [gc]::Collect()
 reg unload HKLM\TempHive
 
-Write-Host "Die Locale-Einstellungen wurden erfolgreich für alle neuen Benutzer auf Deutsch und 24-Stunden-Format gesetzt."
+Write-Host "4. Systemeinstellungen (HKLM) wurden erfolgreich angewendet." -ForegroundColor Green
 
-# Log message for completion
-Write-Host "Alle regionalen Einstellungen und Eingabemethoden wurden angewendet." -ForegroundColor Green
+Write-Host "`nAlle Lokalisierungseinstellungen wurden erfolgreich abgeschlossen." -ForegroundColor Green
+Write-Host "Bitte beachten: Ein Neustart wird empfohlen, um alle Änderungen zu aktivieren." -ForegroundColor Yellow
