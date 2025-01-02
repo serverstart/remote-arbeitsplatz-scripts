@@ -40,7 +40,7 @@ function Write-ToLog {
         $script:LogFile = "$(Get-ServerStartDirectory)\log_$(Get-Date -Format 'yyyy-MM-dd-HH-mm-ss-fff').log"
     }
     
-    $Log = "$(Get-Date -UFormat '%T.%3N') - $LogMsg"
+    $Log = "$(Get-Date -UFormat '%T') - $LogMsg"
     
     Write-Host $Log -ForegroundColor $LogColor
     try {
