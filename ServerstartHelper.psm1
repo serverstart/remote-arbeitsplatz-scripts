@@ -24,3 +24,29 @@ function Get-ServerStartDirectory {
         return $appDataPath
     }
 }
+
+# Script-scoped variable for log file path
+$script:LogFile = $null
+
+function Write-ToLog {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$LogMsg,
+        [string]$LogColor = "White"
+    )
+
+    if (-not $script:LogFile) {
+        $script:LogFile = "$(Get-ServerStartDirectory)\log_$(Get-Date -Format 'yyyy-MM-dd-HH-mm-ss-fff').log"
+    }
+    
+    $Log = "$(Get-Date -UFormat '%T.%3N') - $LogMsg"
+    
+    Write-Host $Log -ForegroundColor $LogColor
+    try {
+        $Log | Out-File -FilePath $script:LogFile -Append -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to write to log file: $_"
+    }
+}
