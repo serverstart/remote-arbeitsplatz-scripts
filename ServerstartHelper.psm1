@@ -2,35 +2,25 @@ function Get-ServerStartDirectory {
     [CmdletBinding()]
     param()
     
-    # Try ProgramData first
+    # Try ProgramData path first
     $programDataPath = "$env:ProgramData\serverstart"
     
-    if (-not (Test-Path $programDataPath)) {
-        try {
+    try {
+        # Create directory if it doesn't exist
+        if (-not (Test-Path $programDataPath)) {
             $null = New-Item -Path $programDataPath -ItemType Directory -Force -ErrorAction Stop
-            Write-Verbose "Created directory at ProgramData: $programDataPath"
-            return $programDataPath
         }
-        catch {
-            Write-Verbose "Failed to create directory in ProgramData: $_"
-        }
-    }
-    else {
+        
+        # Test write access with minimal overhead
+        [IO.File]::WriteAllText("$programDataPath\test.txt", "test")
+        Remove-Item "$programDataPath\test.txt" -Force
+        
         return $programDataPath
     }
-    
-    # Fallback to AppData
-    $appDataPath = "$env:APPDATA\serverstart"
-    
-    if (-not (Test-Path $appDataPath)) {
-        try {
-            $null = New-Item -Path $appDataPath -ItemType Directory -Force -ErrorAction Stop
-            Write-Verbose "Created directory at AppData: $appDataPath"
-        }
-        catch {
-            throw "Failed to create directory in both ProgramData and AppData: $_"
-        }
+    catch {
+        # Fallback: Create and use AppData path
+        $appDataPath = "$env:APPDATA\serverstart"
+        $null = New-Item -Path $appDataPath -ItemType Directory -Force -ErrorAction Stop
+        return $appDataPath
     }
-    
-    return $appDataPath
 }
