@@ -3,7 +3,8 @@
 param 
 ( 
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$StorageAccountName,
-    [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ProfileShareName
+    [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ProfileShareName,
+    [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ShareSecret
 )
 
 # Load serverstart Windows-Toolkit
@@ -74,6 +75,16 @@ Write-Host "serverstart - Configure FSLogix : Access to Azure File shares for FS
 $FileServer="$($StorageAccountName).file.core.windows.net"
 $ProfilePath="\\$($FileServer)\$($ProfileShareName)"
 
+##########
+# CMDKEY #
+##########
+
+# Create a user string for the cmdkey command
+$user="localhost\avdaadstorage"
+
+# Store credentials to access the storage account
+cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
+
 ##################################
 #    Configure FSLogix Profile   #
 ##################################
@@ -119,6 +130,8 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "SizeInMBs" -Valu
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Value "VHDX" -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "OutlookCachedMode" -Value 0 -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "RedirXMLSourceFolder" -Value $RedirectXmlSourceFolder -force -PropertyType REG_SZ
+New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
+
 
 Write-Host "serverstart - Configure FSLogix : Done configuring FSLogix Profile Settings"
 
