@@ -80,7 +80,7 @@ $ProfilePath="\\$($FileServer)\$($ProfileShareName)"
 ##########
 
 # Create a user string for the cmdkey command
-$user="localhost\avdaadstorage"
+$user="localhost\$($StorageAccountName)"
 
 # Store credentials to access the storage account
 cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
