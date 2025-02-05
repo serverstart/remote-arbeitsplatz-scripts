@@ -231,3 +231,43 @@ Get-MpPreference | Select-Object -ExpandProperty ExclusionProcess
 
 Write-Host "serverstart - Configure FSLogix : Finished adding exclusions for Microsoft Defender"
 
+################################## 
+# Configure FSLogix Exclude List #
+##################################
+
+$users = @(
+    "Administrator",
+    "ServerstartAdmin"
+)
+
+$groups = @(
+    "FSLogix Profile Exclude List",
+    "FSLogix ODFC Exclude List"
+)
+
+foreach ($group in $groups) {
+    Write-Host "`nBearbeite Gruppe: $group" -ForegroundColor Cyan
+    
+    if (-not (Get-LocalGroup -Name $group -ErrorAction SilentlyContinue)) {
+        Write-Host "Info: Gruppe existiert nicht"
+        continue
+    }
+    
+    foreach ($user in $users) {
+        try {
+            $localUser = Get-LocalUser -Name $user -ErrorAction Stop
+            $groupMembers = Get-LocalGroupMember -Group $group
+            
+            if ($groupMembers.Name -contains "$env:COMPUTERNAME\$user") {
+                Write-Host "> Benutzer $user bereits in der Gruppe"
+            } else {
+                Add-LocalGroupMember -Group $group -Member $user
+                Write-Host "> Benutzer $user hinzugefügt"
+            }
+        } catch [Microsoft.PowerShell.Commands.UserNotFoundException] {
+            Write-Host "> Benutzer $user existiert nicht"
+        } catch {
+            Write-Host "> Fehler bei $user - $($_.Exception.Message)"
+        }
+    }
+}
