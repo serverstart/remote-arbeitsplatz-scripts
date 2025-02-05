@@ -26,10 +26,10 @@ $ProfilePath="\\$($FileServer)\$($ProfileShareName)"
 ##########
 
 # Create a user string for the cmdkey command
-#$user="localhost\$($StorageAccountName)"
+$user="localhost\$($StorageAccountName)"
 
 # Store credentials to access the storage account
-#cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
+cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
 
 ##################################
 #    Configure FSLogix Profile   #
@@ -76,7 +76,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "SizeInMBs" -Valu
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Value "VHDX" -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "OutlookCachedMode" -Value 0 -force
 #New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "RedirXMLSourceFolder" -Value $RedirectXmlSourceFolder -force
-#New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
+New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
 
 
 Write-Host "serverstart - Configure FSLogix : Done configuring FSLogix Profile Settings"
