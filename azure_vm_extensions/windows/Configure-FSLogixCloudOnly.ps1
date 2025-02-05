@@ -15,60 +15,6 @@ Write-Host "serverstart managed IT" -ForegroundColor Blue
 Write-Host "Configuring FSLogix" -ForegroundColor Blue
 
 
-#################################################################
-#    Access to Azure File shares for FSLogix profiles           #
-#################################################################
-
-# Source: https://github.com/Azure/RDS-Templates/blob/master/CustomImageTemplateScripts/CustomImageTemplateScripts_2024-03-27/FSLogixKerberos.ps1
-
-Write-Host "serverstart - Configure FSLogix : Access to Azure File shares for FSLogix profiles"
-
-# Enable Azure AD Kerberos
-
-Write-Host 'serverstart - Configure FSLogix : Enable Azure AD Kerberos ***'
-$registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa\Kerberos\Parameters"
-$registryKey= "CloudKerberosTicketRetrievalEnabled"
-$registryValue = "1"
-
-IF(!(Test-Path $registryPath)) {
-    New-Item -Path $registryPath -Force | Out-Null
-}
-
-try {
-    New-ItemProperty -Path $registryPath -Name $registryKey -Value $registryValue -PropertyType DWORD -Force | Out-Null
-}
-catch {
-    Write-Host "serverstart - Configure FSLogix : Enable Azure AD Kerberos - Cannot add the registry key $registryKey : [$($_.Exception.Message)]"
-    Write-Host "Message: [$($_.Exception.Message)"]
-}
-
-# Disable LsaCfgFlags
-New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LsaCfgFlags" -Value 0 -force
-
-
-# Create new reg key "LoadCredKey"
- 
-Write-Host 'serverstart - Configure FSLogix : Create new reg key LoadCredKey ***'
-
-$LoadCredRegPath = "HKLM:\Software\Policies\Microsoft\AzureADAccount"
-$LoadCredName = "LoadCredKeyFromProfile"
-$LoadCredValue = "1"
-
-IF(!(Test-Path $LoadCredRegPath)) {
-     New-Item -Path $LoadCredRegPath -Force | Out-Null
-}
-
-try {
-    New-ItemProperty -Path $LoadCredRegPath -Name $LoadCredName -Value $LoadCredValue -PropertyType DWORD -Force | Out-Null
-}
-catch {
-    Write-Host "serverstart - Configure FSLogix :  LoadCredKey - Cannot add the registry key $LoadCredName *** : [$($_.Exception.Message)]"
-    Write-Host "Message: [$($_.Exception.Message)"]
-}
-
-Write-Host "serverstart - Configure FSLogix : Access to Azure File shares for FSLogix profiles - Exit Code: $LASTEXITCODE ***"
-
-
 ###################
 #    Variables    #
 ###################
@@ -80,10 +26,10 @@ $ProfilePath="\\$($FileServer)\$($ProfileShareName)"
 ##########
 
 # Create a user string for the cmdkey command
-$user="localhost\$($StorageAccountName)"
+#$user="localhost\$($StorageAccountName)"
 
 # Store credentials to access the storage account
-cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
+#cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
 
 ##################################
 #    Configure FSLogix Profile   #
@@ -129,8 +75,8 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "ProfileType" -Va
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "SizeInMBs" -Value 20000 -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Value "VHDX" -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "OutlookCachedMode" -Value 0 -force
-New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "RedirXMLSourceFolder" -Value $RedirectXmlSourceFolder -force -PropertyType REG_SZ
-New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
+#New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "RedirXMLSourceFolder" -Value $RedirectXmlSourceFolder -force
+#New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "AccessNetworkAsComputerObject" -Value "1" -force
 
 
 Write-Host "serverstart - Configure FSLogix : Done configuring FSLogix Profile Settings"
