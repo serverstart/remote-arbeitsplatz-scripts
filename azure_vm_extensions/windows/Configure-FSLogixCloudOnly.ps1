@@ -6,6 +6,10 @@ param
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ProfileShareName
 )
 
+# Load serverstart Windows-Toolkit
+Invoke-Expression (Invoke-WebRequest "https://raw.githubusercontent.com/serverstart/windows-toolkit/main/bootstrap.ps1" -UseBasicParsing).Content
+
+
 Write-Host "serverstart managed IT" -ForegroundColor Blue
 Write-Host "Configuring FSLogix" -ForegroundColor Blue
 
@@ -88,6 +92,9 @@ $path = "HKLM:\SOFTWARE\FSLogix\Profiles"
 # Get all properties at the specified path
 $properties = Get-ItemProperty -Path $path | Select-Object -Property *
 
+# Build XML Source Folder Path
+$RedirectXmlSourceFolder = (Get-ServerStartPowerShellAssetsPath) + "\FSLogix"
+
 # Loop through each property and remove it
 foreach ($property in $properties.PSObject.Properties) {
     # Skip default properties
@@ -100,7 +107,8 @@ Write-Output "All properties in $path have been removed."
 
 # Apply new settings to profiles path4
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "Enabled" -Value 1 -force
-New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "CCDLocations" -Value "type=smb,connectionString=$ProfilePath" -PropertyType MultiString -force
+#New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "CCDLocations" -Value "type=smb,connectionString=$ProfilePath" -PropertyType MultiString -force
+New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VHDLocations" -Value "$ProfilePath" -PropertyType MultiString -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "ConcurrentUserSessions" -Value 1 -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "DeleteLocalProfileWhenVHDShouldApply" -Value 1 -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "FlipFlopProfileDirectoryName" -Value 1 -force
@@ -110,6 +118,7 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "ProfileType" -Va
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "SizeInMBs" -Value 20000 -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "VolumeType" -Value "VHDX" -force
 New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "OutlookCachedMode" -Value 0 -force
+New-ItemProperty -Path "HKLM:\SOFTWARE\FSLogix\Profiles" -Name "RedirXMLSourceFolder" -Value $RedirectXmlSourceFolder -force -PropertyType REG_SZ
 
 Write-Host "serverstart - Configure FSLogix : Done configuring FSLogix Profile Settings"
 
@@ -122,36 +131,90 @@ Write-Host "serverstart - Configure FSLogix : Done configuring FSLogix Profile S
 
 Write-Host "serverstart - Configure FSLogix : Adding exclusions for Microsoft Defender"
 
-try {
-     $filelist = `
-  "%ProgramFiles%\FSLogix\Apps\frxdrv.sys", `
-  "%ProgramFiles%\FSLogix\Apps\frxdrvvt.sys", `
-  "%ProgramFiles%\FSLogix\Apps\frxccd.sys", `
-  "%TEMP%\*.VHD", `
-  "%TEMP%\*.VHDX", `
-  "%Windir%\TEMP\*.VHD", `
-  "%Windir%\TEMP\*.VHDX" `
+# Array mit allen auszuschließenden Pfaden
+$exclusionPaths = @(
+    # FSLogix Treiber und Systemdateien
+    "$env:ProgramFiles\FSLogix\Apps\frxdrv.sys",
+    "$env:ProgramFiles\FSLogix\Apps\frxdrvvt.sys",
+    "$env:ProgramFiles\FSLogix\Apps\frxccd.sys",
+    
+    # Temporäre VHD(X) Dateien im TEMP-Verzeichnis
+    "%TEMP%\*.VHD",
+    "%TEMP%\*.VHDX",
+    "%TEMP%\*\*.VHD",
+    "%TEMP%\*\*.VHDX",
+    
+    # Temporäre VHD(X) Dateien im Windows TEMP-Verzeichnis
+    "%Windir%\TEMP\*.VHD",
+    "%Windir%\TEMP\*.VHDX",
+    "%Windir%\TEMP\*\*.VHD",
+    "%Windir%\TEMP\*\*.VHDX",
+    
+    # Cloud Cache spezifische Ausschlüsse
+    "%ProgramData%\FSLogix\Cache\*",
+    "%ProgramData%\FSLogix\Proxy\*"
+)
 
-    $processlist = `
-    "%ProgramFiles%\FSLogix\Apps\frxccd.exe", `
-    "%ProgramFiles%\FSLogix\Apps\frxccds.exe", `
-    "%ProgramFiles%\FSLogix\Apps\frxsvc.exe"
+# Netzwerkpfade für VHD(X)-Dateien
+$networkPaths = @(
+    "$ProfilePath\*\*.VHD",
+    "$ProfilePath\*\*.VHD.lock",
+    "$ProfilePath\*\*.VHD.meta",
+    "$ProfilePath\*\*.VHD.metadata",
+    "$ProfilePath\*\*.VHDX",
+    "$ProfilePath\*\*.VHDX.lock",
+    "$ProfilePath\*\*.VHDX.meta",
+    "$ProfilePath\*\*.VHDX.metadata"
+)
 
-    Foreach($item in $filelist){
-        Add-MpPreference -ExclusionPath $item}
-    Foreach($item in $processlist){
-        Add-MpPreference -ExclusionProcess $item}
+# Array mit allen auszuschließenden Prozessen
+$exclusionProcesses = @(
+    "$env:ProgramFiles\FSLogix\Apps\fxccd.exe",
+    "$env:ProgramFiles\FSLogix\Apps\frxced.exe",
+    "$env:ProgramFiles\FSLogix\Apps\frxsvc.exe"
+)
 
-
-    Add-MpPreference -ExclusionPath "%ProgramData%\FSLogix\Cache\*.VHD"
-    Add-MpPreference -ExclusionPath "%ProgramData%\FSLogix\Cache\*.VHDX"
-    Add-MpPreference -ExclusionPath "%ProgramData%\FSLogix\Proxy\*.VHD"
-    Add-MpPreference -ExclusionPath "%ProgramData%\FSLogix\Proxy\*.VHDX"
+# Füge jeden Pfad zu den Windows Defender Ausschlüssen hinzu
+Write-Host "Füge lokale Pfadausschlüsse hinzu..." -ForegroundColor Yellow
+foreach ($path in $exclusionPaths) {
+    try {
+        Add-MpPreference -ExclusionPath $path
+        Write-Host "Erfolgreich hinzugefügt: $path" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Fehler beim Hinzufügen von $path : $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
-catch {
-     Write-Host "serverstart - Configure FSLogix : Exception occurred while adding exclusions for Microsoft Defender"
-     Write-Host $PSItem.Exception
+
+Write-Host "`nFüge Netzwerkpfadausschlüsse hinzu..." -ForegroundColor Yellow
+foreach ($path in $networkPaths) {
+    try {
+        Add-MpPreference -ExclusionPath $path
+        Write-Host "Erfolgreich hinzugefügt: $path" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Fehler beim Hinzufügen von $path : $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
+
+# Füge jeden Prozess zu den Windows Defender Ausschlüssen hinzu
+Write-Host "`nFüge Prozessausschlüsse hinzu..." -ForegroundColor Yellow
+foreach ($process in $exclusionProcesses) {
+    try {
+        Add-MpPreference -ExclusionProcess $process
+        Write-Host "Erfolgreich hinzugefügt: $process" -ForegroundColor Green
+    }
+    catch {
+        Write-Host "Fehler beim Hinzufügen von $process : $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+
+Write-Host "`nAlle Ausschlüsse wurden verarbeitet." -ForegroundColor Yellow
+Write-Host "`nAktuelle Pfadausschlüsse:" -ForegroundColor Yellow
+Get-MpPreference | Select-Object -ExpandProperty ExclusionPath
+
+Write-Host "`nAktuelle Prozessausschlüsse:" -ForegroundColor Yellow
+Get-MpPreference | Select-Object -ExpandProperty ExclusionProcess
 
 Write-Host "serverstart - Configure FSLogix : Finished adding exclusions for Microsoft Defender"
 
