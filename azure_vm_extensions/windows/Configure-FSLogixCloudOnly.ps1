@@ -4,7 +4,7 @@ param
 ( 
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$StorageAccountName,
     [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ProfileShareName,
-    [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$ShareSecret
+    [Parameter(ValuefromPipeline=$true,Mandatory=$true)] [string]$AccessKey
 )
 
 # Load serverstart Windows-Toolkit
@@ -29,7 +29,7 @@ $ProfilePath="\\$($FileServer)\$($ProfileShareName)"
 $user="localhost\$($StorageAccountName)"
 
 # Store credentials to access the storage account
-cmdkey.exe /add:$FileServer /user:$($user) /pass:$($ShareSecret)
+cmdkey.exe /add:$FileServer /user:$($user) /pass:$($AccessKey)
 
 ##################################
 #    Configure FSLogix Profile   #
